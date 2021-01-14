@@ -62,4 +62,8 @@ public class FileSaver {
             throw new PersistLayerException(e);
         }
     }
+
+    public byte[] get(int index) {
+        return new byte[0];
+    }
 }

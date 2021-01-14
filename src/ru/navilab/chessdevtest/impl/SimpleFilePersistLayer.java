@@ -13,7 +13,8 @@ public class SimpleFilePersistLayer implements PersistLayer {
 
     @Override
     public byte[] get(int index) {
-        return null;
+        FileSaver fileSaver = fileSaverPool.getFreeFileSaver();
+        return fileSaver.get(index);
     }
 
     @Override
