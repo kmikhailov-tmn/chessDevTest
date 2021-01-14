@@ -15,6 +15,7 @@ public class FileSaver {
     private final SeekableByteChannel dataByteChannel;
     private ByteBuffer intBuffer = ByteBuffer.allocate(4);
     private ByteBuffer longBuffer = ByteBuffer.allocate(8);
+    private IndexAndPositionList indexAndPositionList = new IndexAndPositionList();
 
     public FileSaver(int fileIndex) {
         try {
@@ -27,7 +28,7 @@ public class FileSaver {
 
     private SeekableByteChannel createChannel(int fileIndex, String indexFileExt) throws IOException {
         File file = new File(getFileName(fileIndex, indexFileExt));
-        return Files.newByteChannel(file.toPath(), StandardOpenOption.APPEND);
+        return Files.newByteChannel(file.toPath(), StandardOpenOption.CREATE);
     }
 
     private static final String getFileName(int fileIndex, String fileExt) {
@@ -35,12 +36,14 @@ public class FileSaver {
     }
 
     public synchronized void save(int index, byte[] buffer) {
-        long position = saveData(buffer);
-        saveIndex(index, position);
+        long dataPosition = saveData(buffer);
+        saveIndex(index, dataPosition);
+        indexAndPositionList.add(index, dataPosition);
     }
 
     private void saveIndex(int index, long position) {
         try {
+            seekToAppend(indexByteChannel);
             intBuffer.putInt(index);
             indexByteChannel.write(intBuffer);
             longBuffer.putLong(position);
@@ -53,6 +56,7 @@ public class FileSaver {
     private long saveData(byte[] buffer) {
         try {
             ByteBuffer wrappedBytes = ByteBuffer.wrap(buffer);
+            seekToAppend(dataByteChannel);
             long position = dataByteChannel.position();
             intBuffer.putInt(buffer.length);
             dataByteChannel.write(intBuffer);
@@ -63,7 +67,31 @@ public class FileSaver {
         }
     }
 
+    private void seekToAppend(SeekableByteChannel dataByteChannel) throws IOException {
+        long size = dataByteChannel.size();
+        if (size > 0) dataByteChannel.position(size - 1);
+    }
+
     public byte[] get(int index) {
-        return new byte[0];
+        try {
+            Long dataPosition = indexAndPositionList.getDataPosition(index);
+            dataByteChannel.position(dataPosition);
+            dataByteChannel.read(intBuffer);
+            int size = intBuffer.getInt();
+            ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+            dataByteChannel.read(byteBuffer);
+            return byteBuffer.array();
+        } catch (IOException e) {
+            throw new PersistLayerException(e);
+        }
+    }
+
+    public void close() {
+        try {
+            indexByteChannel.close();
+            dataByteChannel.close();
+        } catch (IOException e) {
+            throw new PersistLayerException(e);
+        }
     }
 }

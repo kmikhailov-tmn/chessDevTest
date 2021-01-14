@@ -23,6 +23,11 @@ public class SimpleFilePersistLayer implements PersistLayer {
     }
 
     @Override
+    public void close() {
+        fileSaverPool.closeAll();
+    }
+
+    @Override
     public int getMaxIndex() {
         return 0;
     }

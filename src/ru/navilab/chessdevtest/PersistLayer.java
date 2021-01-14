@@ -7,5 +7,7 @@ public interface PersistLayer {
 
     void load();
 
+    void close();
+
     int getMaxIndex();
 }

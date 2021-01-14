@@ -15,4 +15,9 @@ public class OneFileSaver implements FileSaverPool {
         if (fileSaver == null) fileSaver = factory.createFileSaver(0);
         return fileSaver;
     }
+
+    @Override
+    public void closeAll() {
+        if (fileSaver != null) fileSaver.close();
+    }
 }
