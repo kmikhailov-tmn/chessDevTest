@@ -58,15 +58,25 @@ public class FileSaver {
         try {
             seekToAppend(indexByteChannel);
             updateMaxIndex(index);
-            intBuffer.rewind();
-            intBuffer.putInt(index);
-            indexByteChannel.write(intBuffer);
-            longBuffer.rewind();
-            longBuffer.putLong(position);
-            indexByteChannel.write(longBuffer);
+            writeInt(index, indexByteChannel);
+            writeLong(position);
         } catch (IOException e) {
             throw new PersistLayerException(e);
         }
+    }
+
+    private void writeLong(long position) throws IOException {
+        longBuffer.rewind();
+        longBuffer.putLong(position);
+        longBuffer.rewind();
+        indexByteChannel.write(longBuffer);
+    }
+
+    private void writeInt(int index, SeekableByteChannel indexByteChannel) throws IOException {
+        intBuffer.rewind();
+        intBuffer.putInt(index);
+        intBuffer.rewind();
+        indexByteChannel.write(intBuffer);
     }
 
     private long saveData(byte[] buffer) {
@@ -74,9 +84,7 @@ public class FileSaver {
             ByteBuffer wrappedBytes = ByteBuffer.wrap(buffer);
             seekToAppend(dataByteChannel);
             long position = dataByteChannel.position();
-            intBuffer.rewind();
-            intBuffer.putInt(buffer.length);
-            dataByteChannel.write(intBuffer);
+            writeInt(buffer.length, dataByteChannel);
             dataByteChannel.write(wrappedBytes);
             return position;
         } catch (IOException e) {
@@ -84,23 +92,29 @@ public class FileSaver {
         }
     }
 
-    private void seekToAppend(SeekableByteChannel dataByteChannel) throws IOException {
-        long size = dataByteChannel.size();
-        if (size > 0) dataByteChannel.position(size - 1);
+    private void seekToAppend(SeekableByteChannel byteChannel) throws IOException {
+        long size = byteChannel.size();
+        byteChannel.position(size);
     }
 
     public byte[] get(int index) {
         try {
             Long dataPosition = indexAndPositionList.getDataPosition(index);
             dataByteChannel.position(dataPosition);
-            dataByteChannel.read(intBuffer);
-            int size = intBuffer.getInt();
+            int size = getInt(dataByteChannel);
             ByteBuffer byteBuffer = ByteBuffer.allocate(size);
             dataByteChannel.read(byteBuffer);
             return byteBuffer.array();
         } catch (IOException e) {
             throw new PersistLayerException(e);
         }
+    }
+
+    private int getInt(SeekableByteChannel dataByteChannel) throws IOException {
+        intBuffer.rewind();
+        dataByteChannel.read(intBuffer);
+        intBuffer.rewind();
+        return intBuffer.getInt();
     }
 
     public void close() {
@@ -118,10 +132,8 @@ public class FileSaver {
             long size = indexByteChannel.size();
             long idxPos = 0;
             while (idxPos < size) {
-                indexByteChannel.read(intBuffer);
-                int index = intBuffer.getInt();
-                indexByteChannel.read(longBuffer);
-                long dataPosition = longBuffer.getLong();
+                int index = getInt(indexByteChannel);
+                long dataPosition = getLong(indexByteChannel);
                 indexAndPositionList.add(index, dataPosition);
                 updateMaxIndex(index);
                 idxPos = indexByteChannel.position();
@@ -129,6 +141,14 @@ public class FileSaver {
         } catch (IOException e) {
             throw new PersistLayerException(e);
         }
+    }
+
+    private long getLong(SeekableByteChannel indexByteChannel) throws IOException {
+        longBuffer.rewind();
+        indexByteChannel.read(longBuffer);
+        longBuffer.rewind();
+        long dataPosition = longBuffer.getLong();
+        return dataPosition;
     }
 
     private void updateMaxIndex(int index) {

@@ -13,6 +13,6 @@ public class Indexer {
      * thread unsafe, should be called in TestImplementation only
      */
     public void init(int nextIndex) {
-        // TODO
+        index = nextIndex;
     }
 }
