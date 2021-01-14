@@ -67,3 +67,5 @@ Thumbs.db
 .idea/kotlinc.xml
 .idea/vcs.xml
 
+*.data
+*.index

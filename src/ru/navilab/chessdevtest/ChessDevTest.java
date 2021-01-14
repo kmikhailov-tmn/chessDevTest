@@ -18,4 +18,9 @@ public interface ChessDevTest {
      * save & get
      */
     void init();
+
+    /**
+     * Used to close all file savers
+     */
+    void close();
 }

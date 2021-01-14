@@ -41,7 +41,7 @@ public class FileSaver {
 
     private SeekableByteChannel createChannel(int fileIndex, String indexFileExt) throws IOException {
         File file = new File(getFileName(fileIndex, indexFileExt));
-        return Files.newByteChannel(file.toPath(), StandardOpenOption.CREATE);
+        return Files.newByteChannel(file.toPath(), StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
     }
 
     private static final String getFileName(int fileIndex, String fileExt) {
@@ -58,8 +58,10 @@ public class FileSaver {
         try {
             seekToAppend(indexByteChannel);
             updateMaxIndex(index);
+            intBuffer.rewind();
             intBuffer.putInt(index);
             indexByteChannel.write(intBuffer);
+            longBuffer.rewind();
             longBuffer.putLong(position);
             indexByteChannel.write(longBuffer);
         } catch (IOException e) {
@@ -72,6 +74,7 @@ public class FileSaver {
             ByteBuffer wrappedBytes = ByteBuffer.wrap(buffer);
             seekToAppend(dataByteChannel);
             long position = dataByteChannel.position();
+            intBuffer.rewind();
             intBuffer.putInt(buffer.length);
             dataByteChannel.write(intBuffer);
             dataByteChannel.write(wrappedBytes);

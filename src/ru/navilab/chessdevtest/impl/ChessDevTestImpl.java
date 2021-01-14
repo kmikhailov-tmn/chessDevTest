@@ -20,6 +20,11 @@ public class ChessDevTestImpl implements ChessDevTest {
         indexer.init(nextIndex);
     }
 
+    @Override
+    public void close() {
+        persistLayer.close();
+    }
+
     public final static ChessDevTestImpl createDefault() {
         return new ChessDevTestImpl(new SimpleFilePersistLayer(), new SimpleMapCacheLayer());
     }
