@@ -10,4 +10,12 @@ package ru.navilab.chessdevtest;
 public interface ChessDevTest {
     int save(byte[] buffer);
     byte[] get(int index);
+
+    /**
+     * Used to init the state of the test after it's creation
+     * Loads saved data if it exists
+     * Warning: not thread safe, call only once  in one thread after constructing the class and before invoking
+     * save & get
+     */
+    void init();
 }

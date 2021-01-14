@@ -1,22 +1,31 @@
-package ru.navilab.chessdevtest;
+package ru.navilab.chessdevtest.impl;
+
+import ru.navilab.chessdevtest.*;
+import ru.navilab.chessdevtest.impl.SimpleMapCacheLayer;
 
 public class ChessDevTestImpl implements ChessDevTest {
     private PersistLayer persistLayer;
     private CacheLayer cacheLayer;
-    private Indexer indexer;
+    private Indexer indexer = new Indexer();
 
-    private ChessDevTestImpl(PersistLayer persistLayer, CacheLayer cacheLayer, Indexer indexer) {
+    private ChessDevTestImpl(PersistLayer persistLayer, CacheLayer cacheLayer) {
         this.persistLayer = persistLayer;
         this.cacheLayer = cacheLayer;
-        this.indexer = indexer;
+    }
+
+    @Override
+    public void init() {
+        persistLayer.load();
+        int nextIndex = persistLayer.getMaxIndex() + 1;
+        indexer.init(nextIndex);
     }
 
     public final static ChessDevTestImpl createDefault() {
-        return new ChessDevTestImpl(new SimpleFilePersistLayer(), new SimpleMapCacheLayer(), new SimpleIndexer());
+        return new ChessDevTestImpl(new SimpleFilePersistLayer(), new SimpleMapCacheLayer());
     }
 
-    public final static ChessDevTestImpl createCustom(PersistLayer persistLayer, CacheLayer cacheLayer, Indexer indexer) {
-        return new ChessDevTestImpl(persistLayer, cacheLayer, indexer);
+    public final static ChessDevTestImpl createCustom(PersistLayer persistLayer, CacheLayer cacheLayer) {
+        return new ChessDevTestImpl(persistLayer, cacheLayer);
     }
 
     @Override

@@ -1,4 +1,6 @@
-package ru.navilab.chessdevtest;
+package ru.navilab.chessdevtest.impl;
+
+import ru.navilab.chessdevtest.PersistLayer;
 
 public class SimpleFilePersistLayer implements PersistLayer {
     @Override
@@ -9,5 +11,15 @@ public class SimpleFilePersistLayer implements PersistLayer {
     @Override
     public byte[] get(int index) {
         return null;
+    }
+
+    @Override
+    public void load() {
+
+    }
+
+    @Override
+    public int getMaxIndex() {
+        return 0;
     }
 }

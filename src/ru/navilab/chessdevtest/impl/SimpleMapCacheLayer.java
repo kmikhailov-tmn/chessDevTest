@@ -1,4 +1,6 @@
-package ru.navilab.chessdevtest;
+package ru.navilab.chessdevtest.impl;
+
+import ru.navilab.chessdevtest.CacheLayer;
 
 public class SimpleMapCacheLayer implements CacheLayer {
     @Override
