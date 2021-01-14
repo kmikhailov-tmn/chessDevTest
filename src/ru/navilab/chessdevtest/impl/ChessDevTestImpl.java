@@ -25,6 +25,11 @@ public class ChessDevTestImpl implements ChessDevTest {
         persistLayer.close();
     }
 
+    @Override
+    public void clearCache() {
+        cacheLayer.clear();
+    }
+
     public final static ChessDevTestImpl createDefault() {
         return new ChessDevTestImpl(new SimpleFilePersistLayer(), new SimpleMapCacheLayer());
     }

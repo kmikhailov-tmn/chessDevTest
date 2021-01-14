@@ -3,12 +3,27 @@ package ru.navilab.chessdevtest;
 import org.junit.jupiter.api.*;
 import ru.navilab.chessdevtest.impl.ChessDevTestImpl;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ChessDevJUnitTest {
-
+    private Random random = new Random();
     public static final String FIRST_CASE = "first case";
     public static final String SECOND_CASE = "second case";
+
+    private static class Item {
+        int index;
+        byte[] bytes;
+
+        public Item(int index, byte[] bytes) {
+            this.index = index;
+            this.bytes = bytes;
+        }
+    }
 
     @Test
     @Order(1)
@@ -46,6 +61,31 @@ public class ChessDevJUnitTest {
         test.init();
         testReadString(test, SECOND_CASE + FIRST_CASE, 3);
         test.close();
+    }
+
+    @Test
+    @Order(5)
+    public void bigTest() {
+        ChessDevTestImpl test = ChessDevTestImpl.createDefault();
+        test.init();
+
+        List<Item> list = new ArrayList<>();
+        for (int i = 0; i < 10000; i++) {
+            byte[] buffer = randomBuffer(1000000);
+            int index = test.save(buffer);
+            list.add(new Item(index, buffer));
+        }
+//        test.clearCache();
+        Collections.shuffle(list);
+        for (Item item : list) {
+            byte[] bytes = test.get(item.index);
+            Assertions.assertArrayEquals(item.bytes, bytes);
+        }
+        test.close();
+    }
+
+    private byte[] randomBuffer(int bound) {
+        return new byte[random.nextInt(bound)];
     }
 
 

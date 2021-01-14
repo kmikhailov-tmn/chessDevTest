@@ -23,4 +23,6 @@ public interface ChessDevTest {
      * Used to close all file savers
      */
     void close();
+
+    void clearCache();
 }
