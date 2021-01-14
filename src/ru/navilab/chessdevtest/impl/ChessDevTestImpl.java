@@ -1,7 +1,9 @@
 package ru.navilab.chessdevtest.impl;
 
-import ru.navilab.chessdevtest.*;
-import ru.navilab.chessdevtest.impl.SimpleMapCacheLayer;
+import ru.navilab.chessdevtest.CacheLayer;
+import ru.navilab.chessdevtest.ChessDevTest;
+import ru.navilab.chessdevtest.Indexer;
+import ru.navilab.chessdevtest.PersistLayer;
 
 public class ChessDevTestImpl implements ChessDevTest {
     private PersistLayer persistLayer;
