@@ -2,7 +2,10 @@ package ru.navilab.chessdevtest.impl;
 
 import ru.navilab.chessdevtest.PersistLayer;
 
+import java.util.List;
+
 public class SimpleFilePersistLayer implements PersistLayer {
+    public static final String BASE_STORAGE_DIR = ".";
     private FileSaverPool fileSaverPool = new OneFileSaver((index) -> { return new FileSaver(index); });
 
     @Override
@@ -18,17 +21,19 @@ public class SimpleFilePersistLayer implements PersistLayer {
     }
 
     @Override
-    public void load() {
-
+    public int load() {
+        int maxIndex = 0;
+        List<FileSaver> fileSaverList = fileSaverPool.getAllFileSavers();
+        for (FileSaver saver : fileSaverList) {
+            saver.load();
+            int index = saver.getMaxIndex();
+            if (index > maxIndex) maxIndex = index;
+        }
+        return maxIndex;
     }
 
     @Override
     public void close() {
         fileSaverPool.closeAll();
-    }
-
-    @Override
-    public int getMaxIndex() {
-        return 0;
     }
 }

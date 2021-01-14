@@ -15,8 +15,8 @@ public class ChessDevTestImpl implements ChessDevTest {
 
     @Override
     public void init() {
-        persistLayer.load();
-        int nextIndex = persistLayer.getMaxIndex() + 1;
+        int maxIndex = persistLayer.load();
+        int nextIndex = maxIndex + 1;
         indexer.init(nextIndex);
     }
 

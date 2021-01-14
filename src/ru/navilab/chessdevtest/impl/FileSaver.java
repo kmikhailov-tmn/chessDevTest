@@ -1,11 +1,14 @@
 package ru.navilab.chessdevtest.impl;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
+import java.util.List;
 
 public class FileSaver {
     public static final String INDEX_FILE_EXT = ".index";
@@ -16,6 +19,7 @@ public class FileSaver {
     private ByteBuffer intBuffer = ByteBuffer.allocate(4);
     private ByteBuffer longBuffer = ByteBuffer.allocate(8);
     private IndexAndPositionList indexAndPositionList = new IndexAndPositionList();
+    private int maxIndex;
 
     public FileSaver(int fileIndex) {
         try {
@@ -24,6 +28,15 @@ public class FileSaver {
         } catch (IOException e) {
             throw new PersistLayerException(e);
         }
+    }
+
+    public static List<String> getIndexFileList(File directory) {
+        return Arrays.asList(directory.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return (name.startsWith(FILE_NAME_PREFIX) && name.endsWith(INDEX_FILE_EXT));
+            }
+        }));
     }
 
     private SeekableByteChannel createChannel(int fileIndex, String indexFileExt) throws IOException {
@@ -44,6 +57,7 @@ public class FileSaver {
     private void saveIndex(int index, long position) {
         try {
             seekToAppend(indexByteChannel);
+            updateMaxIndex(index);
             intBuffer.putInt(index);
             indexByteChannel.write(intBuffer);
             longBuffer.putLong(position);
@@ -93,5 +107,32 @@ public class FileSaver {
         } catch (IOException e) {
             throw new PersistLayerException(e);
         }
+    }
+
+    public void load() {
+        try {
+            indexByteChannel.position(0);
+            long size = indexByteChannel.size();
+            long idxPos = 0;
+            while (idxPos < size) {
+                indexByteChannel.read(intBuffer);
+                int index = intBuffer.getInt();
+                indexByteChannel.read(longBuffer);
+                long dataPosition = longBuffer.getLong();
+                indexAndPositionList.add(index, dataPosition);
+                updateMaxIndex(index);
+                idxPos = indexByteChannel.position();
+            }
+        } catch (IOException e) {
+            throw new PersistLayerException(e);
+        }
+    }
+
+    private void updateMaxIndex(int index) {
+        if (index > maxIndex) maxIndex = index;
+    }
+
+    public int getMaxIndex() {
+        return maxIndex;
     }
 }

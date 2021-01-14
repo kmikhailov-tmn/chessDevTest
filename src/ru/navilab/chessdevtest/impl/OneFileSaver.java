@@ -1,6 +1,7 @@
 package ru.navilab.chessdevtest.impl;
 
-import java.util.function.Function;
+import java.util.Arrays;
+import java.util.List;
 
 public class OneFileSaver implements FileSaverPool {
     private FileSaver fileSaver;
@@ -19,5 +20,10 @@ public class OneFileSaver implements FileSaverPool {
     @Override
     public void closeAll() {
         if (fileSaver != null) fileSaver.close();
+    }
+
+    @Override
+    public List<FileSaver> getAllFileSavers() {
+        return Arrays.asList(getFreeFileSaver());
     }
 }

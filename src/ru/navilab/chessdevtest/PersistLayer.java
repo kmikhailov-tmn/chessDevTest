@@ -5,9 +5,11 @@ public interface PersistLayer {
 
     byte[] get(int index);
 
-    void load();
+    /**
+     * Load index data from file(s)
+     * @return max index determined after load
+     */
+    int load();
 
     void close();
-
-    int getMaxIndex();
 }
