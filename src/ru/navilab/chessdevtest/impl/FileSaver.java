@@ -54,6 +54,8 @@ public class FileSaver {
         try {
             ByteBuffer wrappedBytes = ByteBuffer.wrap(buffer);
             long position = dataByteChannel.position();
+            intBuffer.putInt(buffer.length);
+            dataByteChannel.write(intBuffer);
             dataByteChannel.write(wrappedBytes);
             return position;
         } catch (IOException e) {
