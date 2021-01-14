@@ -59,7 +59,6 @@ public class SimpleMapCacheLayer implements CacheLayer {
     }
 
     private synchronized void cleanCache() {
-        System.err.println("cache " + getFreeMemoryInPercent());
         logger.fine("cleanCache getFreeMemoryInPercent()=" + getFreeMemoryInPercent());
         long currentTimeMillis = System.currentTimeMillis();
         List<Integer> removeList = new ArrayList<>();

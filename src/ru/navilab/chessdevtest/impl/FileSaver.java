@@ -54,6 +54,19 @@ public class FileSaver {
         indexAndPositionList.add(index, dataPosition);
     }
 
+    public synchronized byte[] get(int index) {
+        try {
+            Long dataPosition = indexAndPositionList.getDataPosition(index);
+            dataByteChannel.position(dataPosition);
+            int size = getInt(dataByteChannel);
+            ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+            dataByteChannel.read(byteBuffer);
+            return byteBuffer.array();
+        } catch (IOException e) {
+            throw new PersistLayerException(e);
+        }
+    }
+
     private void saveIndex(int index, long position) {
         try {
             seekToAppend(indexByteChannel);
@@ -97,18 +110,7 @@ public class FileSaver {
         byteChannel.position(size);
     }
 
-    public byte[] get(int index) {
-        try {
-            Long dataPosition = indexAndPositionList.getDataPosition(index);
-            dataByteChannel.position(dataPosition);
-            int size = getInt(dataByteChannel);
-            ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-            dataByteChannel.read(byteBuffer);
-            return byteBuffer.array();
-        } catch (IOException e) {
-            throw new PersistLayerException(e);
-        }
-    }
+
 
     private int getInt(SeekableByteChannel dataByteChannel) throws IOException {
         intBuffer.rewind();

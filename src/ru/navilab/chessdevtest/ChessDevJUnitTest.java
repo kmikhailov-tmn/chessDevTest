@@ -7,13 +7,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ChessDevJUnitTest {
     private Random random = new Random();
     public static final String FIRST_CASE = "first case";
     public static final String SECOND_CASE = "second case";
+    private ChessDevTestImpl test;
 
     private static class Item {
         int index;
@@ -25,63 +30,67 @@ public class ChessDevJUnitTest {
         }
     }
 
+    @BeforeAll
+    public void before() {
+        test = ChessDevTestImpl.createDefault();
+        test.init();
+    }
+
+    @AfterAll
+    public void after() {
+        test.close();
+    }
+
     @Test
     @Order(1)
     public void writeOnlyTest() {
-        ChessDevTestImpl test = ChessDevTestImpl.createDefault();
-        test.init();
         testWriteString(test, FIRST_CASE);
         testWriteString(test, SECOND_CASE);
-        test.close();
     }
 
     @Test
     @Order(2)
     public void readOnlyTest() {
-        ChessDevTestImpl test = ChessDevTestImpl.createDefault();
-        test.init();
         testReadString(test, FIRST_CASE, 1);
         testReadString(test, SECOND_CASE, 2);
-        test.close();
     }
 
     @Test
     @Order(3)
     public void uppend3Test() {
-        ChessDevTestImpl test = ChessDevTestImpl.createDefault();
-        test.init();
         testWriteString(test, SECOND_CASE + FIRST_CASE);
-        test.close();
     }
 
     @Test
     @Order(4)
     public void read3Test() {
-        ChessDevTestImpl test = ChessDevTestImpl.createDefault();
-        test.init();
         testReadString(test, SECOND_CASE + FIRST_CASE, 3);
-        test.close();
     }
 
     @Test
     @Order(5)
-    public void bigTest() {
-        ChessDevTestImpl test = ChessDevTestImpl.createDefault();
-        test.init();
+    public void bigTest() throws InterruptedException {
+        ScheduledExecutorService executor = (ScheduledExecutorService) Executors.newScheduledThreadPool(16);
+        for (int i = 0; i < 100; i++) {
+            executor.schedule(() -> runLongSaveGet(test), 2, TimeUnit.SECONDS);
+        }
+        executor.shutdown();
+        executor.awaitTermination(1, TimeUnit.HOURS);
+    }
 
+    private void runLongSaveGet(ChessDevTestImpl test) {
         List<Item> list = new ArrayList<>();
-        for (int i = 0; i < 10000; i++) {
-            byte[] buffer = randomBuffer(1000000);
+        for (int i = 0; i < 500; i++) {
+            byte[] buffer = randomBuffer(10000);
             int index = test.save(buffer);
             list.add(new Item(index, buffer));
         }
-//        test.clearCache();
+        test.clearCache();
         Collections.shuffle(list);
         for (Item item : list) {
             byte[] bytes = test.get(item.index);
             Assertions.assertArrayEquals(item.bytes, bytes);
         }
-        test.close();
     }
 
     private byte[] randomBuffer(int bound) {
