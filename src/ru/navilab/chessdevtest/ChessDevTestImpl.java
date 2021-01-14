@@ -1,12 +1,23 @@
 package ru.navilab.chessdevtest;
 
-import java.util.List;
-import java.util.ListIterator;
-
 public class ChessDevTestImpl implements ChessDevTest {
-    private PersistLayer persistLayer = new SimpleFilePersistLayer();
-    private CacheLayer cacheLayer = new SimpleMapCacheLayer();
-    private Indexer indexer = new SimpleIndexer();
+    private PersistLayer persistLayer;
+    private CacheLayer cacheLayer;
+    private Indexer indexer;
+
+    private ChessDevTestImpl(PersistLayer persistLayer, CacheLayer cacheLayer, Indexer indexer) {
+        this.persistLayer = persistLayer;
+        this.cacheLayer = cacheLayer;
+        this.indexer = indexer;
+    }
+
+    public final static ChessDevTestImpl createDefault() {
+        return new ChessDevTestImpl(new SimpleFilePersistLayer(), new SimpleMapCacheLayer(), new SimpleIndexer());
+    }
+
+    public final static ChessDevTestImpl createCustom(PersistLayer persistLayer, CacheLayer cacheLayer, Indexer indexer) {
+        return new ChessDevTestImpl(persistLayer, cacheLayer, indexer);
+    }
 
     @Override
     public int save(byte[] buffer) {
@@ -19,19 +30,10 @@ public class ChessDevTestImpl implements ChessDevTest {
     @Override
     public byte[] get(int index) {
         byte[] result = cacheLayer.get(index);
-        if (result == null) persistLayer.get(index);
+        if (result == null) {
+            result = persistLayer.get(index);
+            cacheLayer.put(index, result);
+        }
         return result;
-    }
-
-    public void setPersistLayer(PersistLayer persistLayer) {
-        this.persistLayer = persistLayer;
-    }
-
-    public void setCacheLayer(CacheLayer cacheLayer) {
-        this.cacheLayer = cacheLayer;
-    }
-
-    public void setIndexer(Indexer indexer) {
-        this.indexer = indexer;
     }
 }
