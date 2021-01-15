@@ -38,6 +38,9 @@ public class ChessDevJUnitTest {
         test.close();
     }
 
+    /**
+     * Тест только write методов задания - две строчки
+     */
     @Test
     @Order(1)
     public void writeOnlyTest() {
@@ -45,6 +48,9 @@ public class ChessDevJUnitTest {
         testWriteString(test, SECOND_CASE);
     }
 
+    /**
+     * Тест только get метода -  первый тест по записи должен быть пройден
+     */
     @Test
     @Order(2)
     public void readOnlyTest() {
@@ -52,18 +58,29 @@ public class ChessDevJUnitTest {
         testReadString(test, SECOND_CASE, 2);
     }
 
+    /**
+     * Тест по сохранению третьей строки (тестируется корректность сохранения)
+     */
     @Test
     @Order(3)
     public void uppend3Test() {
         testWriteString(test, SECOND_CASE + FIRST_CASE);
     }
 
+    /**
+     * Тест по чтению третьей строки (тестируется корректность чтения)
+     */
     @Test
     @Order(4)
     public void read3Test() {
         testReadString(test, SECOND_CASE + FIRST_CASE, 3);
     }
 
+    /**
+     * MultiThread тест сначала записывает много порций, потом читает их и сравнивает, в нескольких потоках
+     * (кэш рандомно очищается в разных потоках)
+     * тут конечно надо бы TestNG
+     */
     @Test
     @Order(5)
     public void bigTest() throws InterruptedException {
@@ -82,7 +99,7 @@ public class ChessDevJUnitTest {
             int index = test.save(buffer);
             list.add(new Item(index, buffer));
         }
-        test.clearCache();
+        if (random.nextInt(100) > 70) test.clearCache();
         Collections.shuffle(list);
         for (Item item : list) {
             byte[] bytes = test.get(item.index);
