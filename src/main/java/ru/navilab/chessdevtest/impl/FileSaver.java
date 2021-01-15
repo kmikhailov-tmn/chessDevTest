@@ -20,6 +20,7 @@ public class FileSaver {
     private ByteBuffer longBuffer = ByteBuffer.allocate(8);
     private IndexAndPositionList indexAndPositionList = new IndexAndPositionList();
     private int maxIndex;
+    private volatile boolean busy;
 
     public FileSaver(int fileIndex) {
         try {
@@ -49,13 +50,19 @@ public class FileSaver {
     }
 
     public synchronized void save(int index, byte[] buffer) {
-        long dataPosition = saveData(buffer);
-        saveIndex(index, dataPosition);
-        indexAndPositionList.add(index, dataPosition);
+        try {
+            busy = true;
+            long dataPosition = saveData(buffer);
+            saveIndex(index, dataPosition);
+            indexAndPositionList.add(index, dataPosition);
+        } finally {
+            busy = false;
+        }
     }
 
     public synchronized byte[] get(int index) {
         try {
+            busy = true;
             Long dataPosition = indexAndPositionList.getDataPosition(index);
             dataByteChannel.position(dataPosition);
             int size = getInt(dataByteChannel);
@@ -64,6 +71,8 @@ public class FileSaver {
             return byteBuffer.array();
         } catch (IOException e) {
             throw new PersistLayerException(e);
+        } finally {
+            busy = false;
         }
     }
 
@@ -109,8 +118,6 @@ public class FileSaver {
         long size = byteChannel.size();
         byteChannel.position(size);
     }
-
-
 
     private int getInt(SeekableByteChannel dataByteChannel) throws IOException {
         intBuffer.rewind();
@@ -159,5 +166,9 @@ public class FileSaver {
 
     public int getMaxIndex() {
         return maxIndex;
+    }
+
+    public boolean isReady() {
+        return !busy;
     }
 }
