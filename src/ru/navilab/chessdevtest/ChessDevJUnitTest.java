@@ -3,10 +3,7 @@ package ru.navilab.chessdevtest;
 import org.junit.jupiter.api.*;
 import ru.navilab.chessdevtest.impl.ChessDevTestImpl;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -94,7 +91,9 @@ public class ChessDevJUnitTest {
     }
 
     private byte[] randomBuffer(int bound) {
-        return new byte[random.nextInt(bound)];
+        byte[] bytes = new byte[random.nextInt(bound)];
+        random.nextBytes(bytes);
+        return bytes;
     }
 
 
