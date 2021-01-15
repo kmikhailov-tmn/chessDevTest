@@ -16,10 +16,11 @@ public class ChessDevTestImpl implements ChessDevTest {
     }
 
     @Override
-    public void init() {
+    public int load() {
         int maxIndex = persistLayer.load();
         int nextIndex = maxIndex + 1;
         indexer.init(nextIndex);
+        return nextIndex;
     }
 
     @Override

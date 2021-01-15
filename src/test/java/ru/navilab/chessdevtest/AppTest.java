@@ -30,8 +30,10 @@ public class AppTest {
      */
     @Test
     public void bigTest() throws InterruptedException, ExecutionException {
-        ChessDevTestImpl test = ChessDevTestImpl.createDefault();
-        test.init();
+        ChessDevTest test = ChessDevTestImpl.createDefault();
+        int maxIndex = test.load();
+
+        if (maxIndex > 1) readAllInParallel(test, maxIndex);
 
         // test save then get in parallel
         List<ScheduledFuture<List<Item>>> taskList = parallelSaveGetTest(test);
@@ -45,6 +47,22 @@ public class AppTest {
         test.clearCache();
         parallelGetTest(test, listOfItemList);
         test.close();
+    }
+
+    private void readAllInParallel(ChessDevTest test, int maxIndex) throws ExecutionException, InterruptedException {
+        List<List<Item>> testList = readAllItemList(test, maxIndex);
+        parallelGetTest(test, testList);
+    }
+
+    private List<List<Item>> readAllItemList(ChessDevTest test, int maxIndex) {
+        List<List<Item>> testList = new ArrayList<>();
+        List<Item> list = new ArrayList<>();
+        for (int i = 1; i < maxIndex; i++) {
+            byte[] bytes = test.get(i);
+            list.add(new Item(i, bytes));
+        }
+        testList.add(list);
+        return testList;
     }
 
     private List<List<Item>> getListsOfItemList(List<ScheduledFuture<List<Item>>> taskList) throws InterruptedException, ExecutionException {
@@ -63,7 +81,7 @@ public class AppTest {
         }
     }
 
-    private void parallelGetTest(ChessDevTestImpl test, List<List<Item>> listOfItemList) throws InterruptedException, ExecutionException {
+    private void parallelGetTest(ChessDevTest test, List<List<Item>> listOfItemList) throws InterruptedException, ExecutionException {
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(16);
         for (List<Item> itemList : listOfItemList) {
             executor.schedule(()-> {
@@ -77,7 +95,7 @@ public class AppTest {
         executor.awaitTermination(2, TimeUnit.MINUTES);
     }
 
-    private List<ScheduledFuture<List<Item>>> parallelSaveGetTest(ChessDevTestImpl test) throws InterruptedException {
+    private List<ScheduledFuture<List<Item>>> parallelSaveGetTest(ChessDevTest test) throws InterruptedException {
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(16);
         List<ScheduledFuture<List<Item>>> taskList = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
@@ -89,7 +107,7 @@ public class AppTest {
         return taskList;
     }
 
-    private List<Item> runLongSaveGet(ChessDevTestImpl test) {
+    private List<Item> runLongSaveGet(ChessDevTest test) {
         List<Item> list = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
             byte[] buffer = randomBuffer(random.nextInt(10000));

@@ -12,12 +12,12 @@ public interface ChessDevTest {
     byte[] get(int index);
 
     /**
-     * Used to init the state of the test after it's creation
-     * Loads saved data if it exists
+     * Used to load the state of the test if saved data exist
      * Warning: not thread safe, call only once  in one thread after constructing the class and before invoking
      * save & get
+     * @return maxIndex - maximum index number
      */
-    void init();
+    int load();
 
     /**
      * Used to close all file savers
