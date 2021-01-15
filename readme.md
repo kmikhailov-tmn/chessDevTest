@@ -7,7 +7,7 @@ JUnit test'ы - ru.navilab.chessdevtest.ChessDevJUnitTest
 Сохранение данных выполняется в файлы - ru.navilab.chessdevtest.impl.FileSaver
 всего два файла: storage_n.index и storage_n.data (n - пока 0)
 Т.к. один файл сразу ограничивает Multi Threading (MT) необходимостью синхронизации, то предусмотрена возможность 
-расширения - реализации пула FileSaver'ов для одновременной записи в разных тредах. Пока для простоты (лимит времени 
+расширения - реализации пула FileSaver'ов для одновременной записи в разных тредах (наподобии partition в Kafka). Пока для простоты (лимит времени 
 я сам себе такой сделал) сделан фейк пул из одного FileSaver'а.
 
 Основной интерфейс задачи - ru.navilab.chessdevtest.ChessDevTest
