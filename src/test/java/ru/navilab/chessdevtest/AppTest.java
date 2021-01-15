@@ -74,7 +74,7 @@ public class AppTest {
             }, 0, TimeUnit.SECONDS);
         }
         executor.shutdown();
-        executor.awaitTermination(1, TimeUnit.HOURS);
+        executor.awaitTermination(2, TimeUnit.MINUTES);
     }
 
     private List<ScheduledFuture<List<Item>>> parallelSaveGetTest(ChessDevTestImpl test) throws InterruptedException {
@@ -85,7 +85,7 @@ public class AppTest {
             taskList.add(task);
         }
         executor.shutdown();
-        executor.awaitTermination(1, TimeUnit.HOURS);
+        executor.awaitTermination(2, TimeUnit.MINUTES);
         return taskList;
     }
 
