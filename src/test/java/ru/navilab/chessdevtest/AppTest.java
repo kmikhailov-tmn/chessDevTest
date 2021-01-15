@@ -110,7 +110,7 @@ public class AppTest {
     private List<Item> runLongSaveGet(ChessDevTest test) {
         List<Item> list = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
-            byte[] buffer = randomBuffer(random.nextInt(10000));
+            byte[] buffer = randomBuffer();
             int index = test.save(buffer);
             list.add(new Item(index, buffer));
         }
@@ -123,8 +123,8 @@ public class AppTest {
         return list;
     }
 
-    private byte[] randomBuffer(int bound) {
-        byte[] bytes = new byte[random.nextInt(bound)];
+    private byte[] randomBuffer() {
+        byte[] bytes = new byte[Math.abs(random.nextInt(10000)+1)];
         random.nextBytes(bytes);
         return bytes;
     }
