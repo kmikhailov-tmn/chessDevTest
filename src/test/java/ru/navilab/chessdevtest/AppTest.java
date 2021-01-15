@@ -1,8 +1,6 @@
 package ru.navilab.chessdevtest;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import ru.navilab.chessdevtest.impl.ChessDevTestImpl;
 
@@ -10,13 +8,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class AppTest {
     private final Random random = new Random();
-    private ChessDevTestImpl test;
 
     private static class Item {
         int index;
@@ -34,31 +29,80 @@ public class AppTest {
      * тут конечно надо бы TestNG
      */
     @Test
-    public void bigTest() throws InterruptedException {
-        test = ChessDevTestImpl.createDefault();
+    public void bigTest() throws InterruptedException, ExecutionException {
+        ChessDevTestImpl test = ChessDevTestImpl.createDefault();
         test.init();
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(16);
-        for (int i = 0; i < 100; i++) {
-            executor.schedule(() -> runLongSaveGet(test), 2, TimeUnit.SECONDS);
-        }
-        executor.shutdown();
-        executor.awaitTermination(1, TimeUnit.HOURS);
+
+        // test save then get in parallel
+        List<ScheduledFuture<List<Item>>> taskList = parallelSaveGetTest(test);
+
+        List<List<Item>> listOfItemList = getListsOfItemList(taskList);
+
+        // test read in parallel
+        parallelGetTest(test, listOfItemList);
+
+        // and once again without cache
+        test.clearCache();
+        parallelGetTest(test, listOfItemList);
         test.close();
     }
 
-    private void runLongSaveGet(ChessDevTestImpl test) {
+    private List<List<Item>> getListsOfItemList(List<ScheduledFuture<List<Item>>> taskList) throws InterruptedException, ExecutionException {
+        List<List<Item>> listOfItemList = new ArrayList<>();
+        for (ScheduledFuture<List<Item>> future : taskList) {
+            listOfItemList.add(future.get());
+        }
+        return listOfItemList;
+    }
+
+    private final List<Item> getItems(ScheduledFuture<List<Item>> task) {
+        try {
+            return task.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void parallelGetTest(ChessDevTestImpl test, List<List<Item>> listOfItemList) throws InterruptedException, ExecutionException {
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(16);
+        for (List<Item> itemList : listOfItemList) {
+            executor.schedule(()-> {
+                itemList.forEach((item) -> {
+                    byte[] bytes = test.get(item.index);
+                    Assert.assertArrayEquals(item.bytes, bytes);
+                });
+            }, 0, TimeUnit.SECONDS);
+        }
+        executor.shutdown();
+        executor.awaitTermination(1, TimeUnit.HOURS);
+    }
+
+    private List<ScheduledFuture<List<Item>>> parallelSaveGetTest(ChessDevTestImpl test) throws InterruptedException {
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(16);
+        List<ScheduledFuture<List<Item>>> taskList = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            ScheduledFuture<List<Item>> task = executor.schedule(() -> runLongSaveGet(test), 2, TimeUnit.SECONDS);
+            taskList.add(task);
+        }
+        executor.shutdown();
+        executor.awaitTermination(1, TimeUnit.HOURS);
+        return taskList;
+    }
+
+    private List<Item> runLongSaveGet(ChessDevTestImpl test) {
         List<Item> list = new ArrayList<>();
-        for (int i = 0; i < 500; i++) {
+        for (int i = 0; i < 100; i++) {
             byte[] buffer = randomBuffer(10000);
             int index = test.save(buffer);
             list.add(new Item(index, buffer));
         }
         if (random.nextInt(100) > 70) test.clearCache();
         Collections.shuffle(list);
-        for (Item item : list) {
+        list.parallelStream().forEach((item) -> {
             byte[] bytes = test.get(item.index);
             Assert.assertArrayEquals(item.bytes, bytes);
-        }
+        });
+        return list;
     }
 
     private byte[] randomBuffer(int bound) {
