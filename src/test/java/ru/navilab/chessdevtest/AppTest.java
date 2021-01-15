@@ -80,7 +80,7 @@ public class AppTest {
     private List<ScheduledFuture<List<Item>>> parallelSaveGetTest(ChessDevTestImpl test) throws InterruptedException {
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(16);
         List<ScheduledFuture<List<Item>>> taskList = new ArrayList<>();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 50; i++) {
             ScheduledFuture<List<Item>> task = executor.schedule(() -> runLongSaveGet(test), 2, TimeUnit.SECONDS);
             taskList.add(task);
         }
@@ -92,7 +92,7 @@ public class AppTest {
     private List<Item> runLongSaveGet(ChessDevTestImpl test) {
         List<Item> list = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
-            byte[] buffer = randomBuffer(10000);
+            byte[] buffer = randomBuffer(random.nextInt(10000));
             int index = test.save(buffer);
             list.add(new Item(index, buffer));
         }

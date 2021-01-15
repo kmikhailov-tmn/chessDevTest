@@ -12,8 +12,13 @@ public class IndexAndPositionList {
         dataPositionList.add(dataPosition);
     }
 
+    /**
+     * @param index
+     * @return dataPosition or null if not found
+     */
     public Long getDataPosition(int index) {
         int indexOfIndex = indexList.indexOf(index);
+        if (indexOfIndex == -1) return null;
         return dataPositionList.get(indexOfIndex);
     }
 }

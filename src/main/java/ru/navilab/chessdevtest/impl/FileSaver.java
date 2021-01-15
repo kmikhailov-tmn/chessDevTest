@@ -10,7 +10,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 
-public class FileSaver {
+public class FileSaver implements IndexSaver, Partition {
     public static final String INDEX_FILE_EXT = ".index";
     public static final String DATA_FILE_EXT = ".data";
     public static final String FILE_NAME_PREFIX = "storage_";
@@ -49,6 +49,7 @@ public class FileSaver {
         return FILE_NAME_PREFIX + fileIndex + fileExt;
     }
 
+    @Override
     public synchronized void save(int index, byte[] buffer) {
         try {
             busy = true;
@@ -60,10 +61,9 @@ public class FileSaver {
         }
     }
 
-    public synchronized byte[] get(int index) {
+    synchronized byte[] read(long dataPosition) {
         try {
             busy = true;
-            Long dataPosition = indexAndPositionList.getDataPosition(index);
             dataByteChannel.position(dataPosition);
             int size = getInt(dataByteChannel);
             ByteBuffer byteBuffer = ByteBuffer.allocate(size);
@@ -135,7 +135,24 @@ public class FileSaver {
         }
     }
 
-    public void load() {
+    private long getLong(SeekableByteChannel indexByteChannel) throws IOException {
+        longBuffer.rewind();
+        indexByteChannel.read(longBuffer);
+        longBuffer.rewind();
+        long dataPosition = longBuffer.getLong();
+        return dataPosition;
+    }
+
+    private void updateMaxIndex(int index) {
+        if (index > maxIndex) maxIndex = index;
+    }
+
+    public boolean isReady() {
+        return !busy;
+    }
+
+    @Override
+    public int loadIndices() {
         try {
             indexByteChannel.position(0);
             long size = indexByteChannel.size();
@@ -150,25 +167,17 @@ public class FileSaver {
         } catch (IOException e) {
             throw new PersistLayerException(e);
         }
-    }
-
-    private long getLong(SeekableByteChannel indexByteChannel) throws IOException {
-        longBuffer.rewind();
-        indexByteChannel.read(longBuffer);
-        longBuffer.rewind();
-        long dataPosition = longBuffer.getLong();
-        return dataPosition;
-    }
-
-    private void updateMaxIndex(int index) {
-        if (index > maxIndex) maxIndex = index;
-    }
-
-    public int getMaxIndex() {
         return maxIndex;
     }
 
-    public boolean isReady() {
-        return !busy;
+    public IndexReader getIndexReader(int index) {
+        Long dataPosition = indexAndPositionList.getDataPosition(index);
+        if (dataPosition != null) return new IndexReader() {
+            @Override
+            public byte[] readBytes() {
+                return read(dataPosition);
+            }
+        };
+        return null;
     }
 }
