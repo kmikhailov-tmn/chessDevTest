@@ -3,10 +3,12 @@ package ru.navilab.chessdevtest;
 import org.junit.jupiter.api.*;
 import ru.navilab.chessdevtest.impl.ChessDevTestImpl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -78,7 +80,7 @@ public class ChessDevJUnitTest {
 
     /**
      * MultiThread тест сначала записывает много порций, потом читает их и сравнивает, в нескольких потоках
-     * (кэш рандомно очищается в разных потоках)
+     * (кэш рандомно очищается в разных потоках, чтобы get иногда не только из кэша данные брал, но и читал с диска)
      * тут конечно надо бы TestNG
      */
     @Test

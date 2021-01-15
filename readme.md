@@ -23,4 +23,4 @@ PersistLayer, CacheLayer можно реализовать по другому (
 
 Treshold'ы по очистке мемори кэша надо настраивать в SimpleMapCacheLayer.
 
-Проверял - JUnit' тестами
+Проверял - JUnit' тестами (см. javadocs)
