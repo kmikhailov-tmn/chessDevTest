@@ -22,3 +22,10 @@ PersistLayer, CacheLayer можно реализовать по другому (
 Treshold'ы по очистке мемори кэша надо настраивать в SimpleMapCacheLayer.
 
 Проверял - JUnit' тестами (см. javadocs)
+
+* update 15.01.2021
+
+1. FileSaverPool переименован в PartitionManager (на манер названия "partition" в Kafka)
+2. Реализация PartionManager называется TwoPartionsManager и включает в себя партицию 0 и 1 (итого четыре файла, 2 индекса, 2 с данными)
+3. теперь PartitionManager отдает IndexReader и IndexSaver объекты, все 2 существующие партиции, поэтому он стал больше чем просто Pool - он Manager.
+4. unit test расширен параллельным чтением одних и тех же индексов
